@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sample-app-postgres
+    environment:
+      - POSTGRES_PASSWORD=superdupersecretpassword
+      - POSTGRES_DB=sample-app
+    ports:
+      - 5432:5432
+    volumes:
+      - ../../scripts/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+  sample-app:
+    image: asia-southeast2-docker.pkg.dev/dev-devsecops-exp/khhini-dev/sample-app/cloud-run-db-connection:v1
+    container_name: sample-app
+    build:
+      context: ../../
+      dockerfile: ./deployments/docker/Dockerfile
+    environment:
+      - HOST=0.0.0.0                                                                                                                                                                                                                                  ↵ 127
+      - PORT=8080
+      - POSTGRES_DB_HOST=postgres
+      - POSTGRES_DB_PORT=5432
+      - POSTGRES_DB_PASSWORD=superdupersecretpassword
+      - POSTGRES_DB_NAME=sample-app
+      - POSTGRES_DB_SSL_MODE=disable
+      - JWT_SIGNATURE_KEY=superdupersecretsignaturekey
+    volumes:
+      - ../../scripts/cloudsql:/cloudsql
+    ports:
+      - 8080:8080
+    depends_on:
+      - postgres
